@@ -3,628 +3,571 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Qantica | Fase 1: Egreso e Integración</title>
+    <title>Qantica | Edén</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #050505;
-            --card-bg: rgba(20, 20, 22, 0.7); /* Slightly more opaque for performance */
-            --modal-bg: #0a0a0c; /* Solid color fallback, overlay adds opacity */
+            --bg-base: #050505;
+            --card-bg: #0c0c0e;
             --accent-yellow: #FACC15;
-            --accent-gold: #EAB308;
-            --text-primary: #F3F4F6;
-            --text-secondary: #9CA3AF;
-            --border-light: rgba(255, 255, 255, 0.08);
+            --accent-dim: rgba(250, 204, 21, 0.1);
+            --border-light: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(250, 204, 21, 0.4);
+            --text-gray: #9CA3AF;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: #F3F4F6;
             overflow-x: hidden;
-            /* Static background instead of complex gradients for better mobile performance */
+            -webkit-tap-highlight-color: transparent;
             background-image: 
-                radial-gradient(circle at 0% 0%, rgba(250, 204, 21, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 100% 100%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+                radial-gradient(circle at 15% 0%, rgba(250, 204, 21, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 85% 100%, rgba(255, 255, 255, 0.02) 0%, transparent 40%);
             background-attachment: fixed;
-            -webkit-tap-highlight-color: transparent; /* Removes blue tap box on mobile */
         }
 
-        /* --- Rings Animation (Optimized for GPU) --- */
-        .orbit-ring {
-            position: absolute;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            /* Hardware acceleration */
-            transform: translate3d(-50%, -50%, 0);
-            will-change: transform;
-            z-index: -1;
-            pointer-events: none;
-        }
-        
-        /* Reduced size slightly for mobile to prevent huge repaint areas */
-        .ring-1 { width: 140vw; height: 140vw; max-width: 600px; max-height: 600px; animation: spin 60s linear infinite; border-color: rgba(250, 204, 21, 0.05); }
-        .ring-2 { width: 180vw; height: 180vw; max-width: 900px; max-height: 900px; animation: spin 80s linear infinite reverse; }
-        .ring-3 { width: 220vw; height: 220vw; max-width: 1200px; max-height: 1200px; border: 1px dashed rgba(255, 255, 255, 0.02); }
-        
-        @keyframes spin { 
-            0% { transform: translate3d(-50%, -50%, 0) rotate(0deg); }
-            100% { transform: translate3d(-50%, -50%, 0) rotate(360deg); } 
-        }
-
-        /* --- Premium Card Styling --- */
-        .premium-card {
-            background: var(--card-bg);
-            /* Optimized blur: only applied if device supports it well */
-            backdrop-filter: blur(12px); 
-            -webkit-backdrop-filter: blur(12px);
+        /* Compartimentos */
+        .compartment {
+            background-color: var(--card-bg);
             border: 1px solid var(--border-light);
-            border-radius: 20px;
+            border-radius: 16px;
+            padding: 1.5rem;
             position: relative;
-            overflow: hidden;
-            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
-        }
-
-        /* Hover effects - Desktop only mostly */
-        @media (hover: hover) {
-            .premium-card:hover {
-                border-color: rgba(250, 204, 21, 0.4);
-                transform: translateY(-4px);
-                box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
-            }
-        }
-        
-        /* Active state for Mobile touch feedback */
-        .premium-card:active {
-            transform: scale(0.98);
-            border-color: rgba(250, 204, 21, 0.4);
-        }
-
-        .premium-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            opacity: 0.5;
-            pointer-events: none;
-        }
-        
-        /* Interactive Hint */
-        .click-hint {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--accent-yellow);
-            opacity: 0.7; /* Always visible on mobile to indicate interactivity */
             transition: all 0.3s ease;
         }
-        @media (min-width: 768px) {
-            .click-hint { opacity: 0; transform: translateY(10px); }
-            .premium-card:hover .click-hint { opacity: 1; transform: translateY(0); }
-        }
 
-        /* Typography */
-        h1, h2, h3 { letter-spacing: -0.02em; }
-        
-        .text-accent {
-            color: var(--accent-yellow);
-            /* Removed heavy text-shadow for performance */
-        }
-
-        /* Layout Grid */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        @media (min-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 1.2fr 1fr;
-                gap: 24px;
-            }
-            .full-width { grid-column: span 2; }
-        }
-
-        /* Animations */
-        .fade-in {
-            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
-
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.15s; }
-        .delay-3 { animation-delay: 0.2s; }
-        .delay-4 { animation-delay: 0.25s; }
-
-        /* Icons */
-        .icon-box {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.03);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid rgba(255,255,255,0.05);
-            margin-bottom: 16px;
-            transition: color 0.3s ease, background 0.3s ease;
-        }
-        
-        .premium-card:hover .icon-box {
-            background: rgba(250, 204, 21, 0.1);
-            color: var(--accent-yellow);
-        }
-
-        /* Badge */
-        .badge {
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.02);
-            color: var(--text-secondary);
-            white-space: nowrap;
-        }
-        .badge-accent {
-            border-color: rgba(250, 204, 21, 0.3);
-            color: var(--accent-yellow);
-            background: rgba(250, 204, 21, 0.05);
-        }
-
-        /* --- MODAL STYLES --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); /* Darker, no blur for performance if needed */
-            backdrop-filter: blur(8px);
-            z-index: 100;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end; /* Mobile: slide from bottom */
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            padding: 0;
-        }
-        
-        @media (min-width: 768px) {
-            .modal-overlay { align-items: center; padding: 20px; }
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-content {
-            background: var(--modal-bg);
-            width: 100%;
-            max-width: 900px;
-            height: 85vh; /* Mobile height */
-            max-height: 90vh;
-            overflow-y: auto;
-            border-top-left-radius: 24px;
-            border-top-right-radius: 24px;
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 24px;
-            transform: translateY(100%);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-        }
-
-        @media (min-width: 768px) {
-            .modal-content {
-                width: 90%;
-                height: auto;
-                border-radius: 24px;
-                padding: 40px;
-                transform: translateY(20px) scale(0.95);
-            }
-        }
-
-        .modal-overlay.active .modal-content {
-            transform: translateY(0) scale(1);
-        }
-
-        .modal-close {
-            position: sticky;
-            top: 0;
-            right: 0;
-            float: right;
-            background: rgba(0,0,0,0.5);
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            font-size: 20px;
+        .compartment.interactive {
             cursor: pointer;
-            z-index: 50;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 10px;
-            margin-left: 10px;
-            backdrop-filter: blur(4px);
-        }
-
-        /* List styling within modal */
-        .feature-list li {
-            position: relative;
-            padding-left: 1.2rem;
-            margin-bottom: 0.5rem;
-            color: #9CA3AF;
-        }
-        .feature-list li::before {
-            content: '•';
-            position: absolute;
-            left: 0;
-            color: var(--accent-yellow);
         }
         
-        /* Mobile Scrollbar hiding */
-        .modal-content::-webkit-scrollbar {
-            width: 4px;
+        .compartment.interactive:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 15px rgba(250,204,21,0.05);
         }
-        .modal-content::-webkit-scrollbar-thumb {
-            background: #333;
-            border-radius: 2px;
+
+        /* ----- EMBUDO DE FLUJO INTERACTIVO ----- */
+        .flow-connector {
+            width: 2px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.2), rgba(250,204,21,0.5));
+            position: relative;
+            transition: all 0.3s ease;
         }
+        .flow-connector.fail-path {
+            background: linear-gradient(to bottom, rgba(255,255,255,0.2), rgba(156,163,175,0.5));
+        }
+        
+        /* Animación de pulso para el conector activo */
+        .pulse-line::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -2px;
+            width: 6px; height: 6px;
+            background: var(--accent-yellow);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-yellow);
+            animation: flowDown 2s infinite linear;
+        }
+        .pulse-line.fail-path::after {
+            background: #9CA3AF;
+            box-shadow: 0 0 10px #9CA3AF;
+        }
+
+        @keyframes flowDown {
+            0% { top: 0; opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        /* Tarjetas del Embudo */
+        .funnel-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .funnel-card:hover {
+            border-color: var(--accent-yellow);
+            background: rgba(250,204,21,0.05);
+            transform: scale(1.02);
+        }
+
+        /* CURSO PREMIUM SHINE */
+        .shiny-course {
+            background: linear-gradient(135deg, #1f1c08 0%, #3a320c 50%, #1f1c08 100%);
+            border: 1px solid var(--accent-yellow);
+            box-shadow: 0 0 20px rgba(250,204,21,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .shiny-course::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -150%;
+            width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(250,204,21,0.3), transparent);
+            transform: skewX(-25deg);
+            animation: shine 3s infinite;
+        }
+        @keyframes shine {
+            0% { left: -150%; }
+            50%, 100% { left: 200%; }
+        }
+
+        /* ----- EFECTO CONTRATOS ----- */
+        .contract-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .contract-card .data-stream {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 2px;
+            background: var(--accent-yellow);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.5s ease;
+        }
+        .contract-card:hover .data-stream {
+            transform: scaleX(1);
+        }
+        .contract-card:hover .iteracion-text {
+            color: var(--accent-yellow);
+            text-shadow: 0 0 8px rgba(250,204,21,0.5);
+        }
+
+        /* ----- EFECTO CO-FINANCIACIÓN ----- */
+        .co-finance-block { position: relative; overflow: hidden; }
+        .co-finance-default { transition: opacity 0.3s ease, transform 0.3s ease; }
+        .co-finance-hover {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; transform: scale(0.9); transition: opacity 0.3s ease, transform 0.3s ease;
+            background: var(--card-bg);
+        }
+        .compartment:hover .co-finance-default { opacity: 0; transform: translateY(-10px); }
+        .compartment:hover .co-finance-hover { opacity: 1; transform: scale(1); }
+
+        /* ----- EFECTO QANTICA ACTIVATE ----- */
+        .activate-glow { transition: all 0.3s ease; }
+        .compartment:hover .activate-glow {
+            color: #000; background: var(--accent-yellow); box-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
+        }
+
+        @keyframes bg-pan {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+
+        /* Utilities */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col py-8 px-4 md:py-12 md:px-6 relative">
+<body class="min-h-screen flex flex-col py-8 px-4 md:py-12 md:px-8">
 
-    <!-- Background Orbits -->
-    <div class="orbit-ring ring-1"></div>
-    <div class="orbit-ring ring-2"></div>
-    <div class="orbit-ring ring-3"></div>
-
-    <!-- Header Section -->
-    <header class="text-center mb-8 md:mb-12 fade-in relative z-10">
-        <div class="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full border border-yellow-500/20 bg-yellow-500/5 backdrop-blur-md">
+    <!-- CABECERA -->
+    <header class="text-center mb-12 relative z-10 max-w-4xl mx-auto">
+        <div class="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full border border-yellow-500/20 bg-yellow-500/5 cursor-pointer hover:bg-yellow-500/10 transition-colors">
             <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
-            <span class="text-[10px] font-mono text-yellow-400 tracking-widest uppercase">Fase 01 Activa</span>
+            <span class="text-[10px] font-mono text-yellow-400 tracking-widest uppercase">Ecosistema Social Activo</span>
         </div>
-        <h1 class="text-4xl md:text-6xl font-bold text-white mb-3 md:mb-4 leading-tight">
-            Egreso e <span class="block md:inline text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-500">Integración</span>
+        <h1 class="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight">
+            El <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-500">Edén</span>
         </h1>
-        <p class="text-sm md:text-lg text-gray-400 max-w-2xl mx-auto font-light leading-relaxed px-4">
-            Salida del Método. Recepción de Satélites y potenciación del Creador en el ecosistema.
+        <p class="text-sm md:text-base text-gray-400 font-light leading-relaxed max-w-2xl mx-auto">
+            La plataforma tecnológica que irrumpe en la industria audiovisual para cambiar las reglas del juego.
         </p>
     </header>
 
-    <!-- Main Content -->
-    <main class="main-grid relative z-10 pb-10">
+    <!-- ARQUITECTURA PRINCIPAL -->
+    <main class="max-w-7xl mx-auto w-full grid grid-cols-1 gap-6 relative z-10">
 
-        <!-- ========================================== -->
-        <!-- COL 1: AREA SATÉLITES + INTRANET (CREADOR) -->
-        <!-- ========================================== -->
-        <div class="premium-card p-6 md:p-10 fade-in delay-1 flex flex-col justify-between h-full bg-gradient-to-br from-white/5 to-transparent">
-            <div>
-                <div class="flex justify-between items-start mb-6">
-                    <div class="badge badge-accent">Plataforma Central</div>
-                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
+        <!-- ESTRUCTURA CENTRAL: Título Divisor -->
+        <div class="text-center mb-2 mt-4 hover:scale-105 transition-transform cursor-default">
+            <h2 class="text-xs font-bold text-gray-500 tracking-[0.3em] uppercase transition-colors hover:text-yellow-500">Plataforma Central</h2>
+            <div class="w-16 h-px bg-yellow-500/30 mx-auto mt-2"></div>
+        </div>
+
+        <!-- FILA 1: MÉTODO (Embudo Interactivo) & CREADOR (Contratos) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- COMPARTIMENTO 1: MÉTODO (EMBUDO LÓGICO E INTERACTIVO) -->
+            <div class="compartment flex flex-col h-full overflow-hidden interactive group border-yellow-500/20">
+                <div class="flex items-center justify-between mb-6 border-b border-white/5 pb-4 relative z-10">
+                    <h3 class="text-xl font-bold text-white uppercase tracking-wider flex items-center gap-2 group-hover:text-yellow-400 transition-colors">
+                        <span class="w-2 h-2 bg-yellow-400 rounded-full"></span> Método
+                    </h3>
+                    <span class="text-[10px] text-gray-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded">Embudo de Acceso</span>
                 </div>
-                
-                <h2 class="text-3xl md:text-4xl font-semibold text-white mb-2">Intranet</h2>
-                <h3 class="text-xl md:text-2xl text-gray-400 font-light mb-6">Potenciar al <span class="text-accent font-medium">CREADOR</span></h3>
-                
-                <div class="space-y-4">
-                    <p class="text-sm text-gray-400 leading-relaxed border-l-2 border-yellow-500/30 pl-4">
-                        Punto de conexión donde el talento converge. Herramientas diseñadas para maximizar el potencial creativo post-método.
-                    </p>
-                    <ul class="text-xs text-gray-500 space-y-2 font-mono mt-4">
-                        <li class="flex items-center gap-2">
-                            <span class="w-1 h-1 bg-yellow-500 rounded-full"></span> Gestión de Proyecto
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <span class="w-1 h-1 bg-yellow-500 rounded-full"></span> Acceso a Herramientas
-                        </li>
-                    </ul>
+
+                <!-- DIAGRAMA DE FLUJO INTERACTIVO -->
+                <div class="flex flex-col items-center w-full px-1">
+                    
+                    <!-- PASO 1: ENTRADA -->
+                    <div class="funnel-card w-[90%] text-center z-10 p-3">
+                        <span class="text-[10px] text-yellow-400 font-bold tracking-widest block mb-1">FASE 1: ENTRADA Y TESTEO</span>
+                        <div class="flex items-center justify-center gap-2 text-white text-sm font-semibold">
+                            <div class="w-5 h-5 rounded-full bg-yellow-500 text-black text-[10px] flex items-center justify-center font-bold">C</div>
+                            El Creador ingresa a Prueba
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-2 bg-black/50 inline-block px-2 py-0.5 rounded">Tiempo límite: 1 semana</p>
+                    </div>
+
+                    <!-- BIFURCACIÓN -->
+                    <div class="flex w-full justify-between mt-2 relative">
+                        <!-- Conector Izquierdo (Aprobado) -->
+                        <div class="w-1/2 flex flex-col items-center">
+                            <div class="flow-connector pulse-line h-6"></div>
+                        </div>
+                        <!-- Conector Derecho (Rechazado -> En Revisión) -->
+                        <div class="w-1/2 flex flex-col items-center">
+                            <div class="flow-connector fail-path pulse-line h-6"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex w-full gap-3 z-10">
+                        
+                        <!-- CAMINO A: APROBADO -->
+                        <div class="w-1/2 flex flex-col gap-2">
+                            <div class="funnel-card border-yellow-500/30 bg-yellow-500/5 text-center group/card h-full p-2.5">
+                                <span class="text-[9px] text-yellow-400 uppercase tracking-widest block mb-1">APROBADO</span>
+                                <h4 class="text-xs text-white font-semibold mb-2">Trabajo Interno</h4>
+                                <p class="text-[9.5px] text-gray-400 mb-3">1 mes trabajando con el Método.</p>
+                                
+                                <div class="space-y-1.5 mt-auto">
+                                    <div class="bg-black/40 border border-yellow-500/20 rounded p-1.5 transition-colors group-hover/card:bg-yellow-500/20 text-left">
+                                        <span class="text-[9px] text-gray-300 block leading-tight">✓ Si activa:<br><strong class="text-white">Acceso a Dashboard</strong></span>
+                                    </div>
+                                    <div class="bg-black/40 border border-gray-700/50 rounded p-1.5 text-left">
+                                        <span class="text-[9px] text-gray-400 block leading-tight">✗ Si NO activa:<br><span class="text-[10px] text-gray-500">Cede su espacio</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CAMINO B: EN REVISIÓN (Limbo) -->
+                        <div class="w-1/2 flex flex-col gap-2">
+                            <div class="funnel-card border-white/10 text-center h-full flex flex-col p-2.5">
+                                <span class="text-[9px] text-gray-400 uppercase tracking-widest block mb-1">EN REVISIÓN</span>
+                                <h4 class="text-xs text-white font-semibold mb-1">Pre-Dashboard</h4>
+                                <p class="text-[9px] text-gray-400 mb-2 leading-tight">Análisis de 1 pág. con fallos graves a mejorar en 1 mes.</p>
+                                
+                                <div class="mt-auto space-y-1.5">
+                                    <div class="bg-black/40 border border-white/10 rounded p-1.5 text-left">
+                                        <span class="text-[9px] text-gray-300 block">✓ Si lo logra: <strong class="text-white">Entra al Método</strong></span>
+                                    </div>
+                                    <div class="bg-black/40 border border-white/5 rounded p-1.5 flex flex-col gap-1 text-left">
+                                        <span class="text-[8.5px] text-gray-500 block">✗ Si falla de nuevo:</span>
+                                        <!-- Tarjeta Curso Especial -->
+                                        <div class="shiny-course rounded p-1.5 text-center cursor-pointer transform transition-transform hover:scale-105">
+                                            <span class="block text-[7px] text-yellow-200 uppercase tracking-widest mb-0.5">Oportunidad Única</span>
+                                            <span class="text-[10px] text-white font-bold block mb-0.5">CURSO PREMIUM</span>
+                                            <span class="bg-yellow-500 text-black font-bold text-[8px] px-1 py-0.5 rounded">-50% DTO</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
 
-            <!-- Visual "Creator" element -->
-            <div class="mt-8 flex items-center gap-4 p-4 rounded-xl bg-black/40 border border-white/5">
-                <div class="relative">
-                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-tr from-yellow-600 to-yellow-300 shadow-lg shadow-yellow-500/20 flex items-center justify-center text-black font-bold text-lg">C</div>
-                    <div class="absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-green-500 border-2 border-black rounded-full"></div>
+            <!-- COMPARTIMENTO 2: CREADOR (Contratos Interactivos) -->
+            <div class="compartment flex flex-col h-full bg-gradient-to-br from-yellow-500/5 to-transparent border-yellow-500/20 interactive">
+                <div class="flex items-center justify-between mb-6 border-b border-yellow-500/10 pb-4">
+                    <h3 class="text-xl font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 bg-yellow-400 rounded-full"></span> Creador
+                    </h3>
+                    <span class="text-[10px] text-yellow-500/50 uppercase tracking-widest">Intranet</span>
                 </div>
+
+                <!-- Intranet Breve -->
+                <p class="text-xs text-gray-400 leading-relaxed border-l-2 border-yellow-500/30 pl-3 mb-6 transition-colors hover:border-yellow-400">
+                    Punto de conexión donde el talento converge. Herramientas diseñadas para maximizar el potencial creativo.
+                </p>
+
+                <!-- Contratos Inteligentes -->
+                <div class="flex-1 bg-[#070707] rounded-xl p-5 border border-white/5 shadow-inner">
+                    <h4 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <svg class="w-3 h-3 text-yellow-500 animate-spin-slow" style="animation: spin 8s linear infinite;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        Contratos Inteligentes
+                    </h4>
+                    
+                    <div class="space-y-4">
+                        <!-- Contrato Nativo -->
+                        <div class="contract-card bg-white/5 p-4 rounded-lg border border-white/5 transition-colors cursor-crosshair">
+                            <div class="flex justify-between items-center mb-2">
+                                <h5 class="text-white text-sm font-semibold">Contrato Nativo</h5>
+                                <span class="text-[9px] bg-white/10 text-gray-300 border border-white/20 px-2 py-0.5 rounded">PRINCIPAL / INDEPENDIENTE</span>
+                            </div>
+                            <p class="text-[11px] text-gray-400 leading-relaxed mb-2">
+                                Se acerca a la <strong class="text-yellow-400 font-medium">Patente F1</strong>. Protege la autoría inicial del proyecto.
+                            </p>
+                            <!-- Novedad Iteración interactiva -->
+                            <div class="bg-black/60 rounded px-2 py-1.5 border border-white/5 flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shrink-0"></span>
+                                <span class="text-[10px] text-gray-400 iteracion-text transition-colors duration-300">Cada iteración del Creador queda registrada aquí.</span>
+                            </div>
+                            <div class="data-stream"></div>
+                        </div>
+
+                        <!-- Contrato Secundario -->
+                        <div class="contract-card bg-white/5 p-4 rounded-lg border border-white/5 transition-colors cursor-crosshair">
+                            <div class="flex justify-between items-center mb-2">
+                                <h5 class="text-white text-sm font-semibold">Contrato Secundario</h5>
+                                <span class="text-[9px] bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded">PÚBLICO / MÉTRICO</span>
+                            </div>
+                            <p class="text-[11px] text-gray-400 leading-relaxed mb-3">
+                                Se activa con el activo del Satélite. <strong class="text-white">Mide y detecta</strong>, registrando cada interacción de forma transparente.
+                            </p>
+                            
+                            <!-- Pilares Actualizados (Sin Crowdfunding) -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="bg-black/60 rounded text-center py-1.5 border border-white/5 hover:border-yellow-500/30 transition-colors">
+                                    <span class="text-[9px] text-gray-300 uppercase block tracking-wider">Trazabilidad</span>
+                                </div>
+                                <div class="bg-black/60 rounded text-center py-1.5 border border-white/5 hover:border-yellow-500/30 transition-colors">
+                                    <span class="text-[9px] text-gray-300 uppercase block tracking-wider">Comunidad</span>
+                                </div>
+                            </div>
+                            <div class="data-stream"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ========================================== -->
+        <!-- FILA 2: EL EDÉN SOCIAL (Ancho Completo)    -->
+        <!-- ========================================== -->
+        <div class="compartment full-width interactive group border-white/10 bg-gradient-to-b from-[#0c0c0e] to-[#070707]">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 border-b border-white/5 pb-4">
                 <div>
-                    <div class="text-sm text-white font-medium">Perfil Creador</div>
-                    <div class="text-xs text-gray-500">Estado: Integrado</div>
+                    <h3 class="text-xl font-bold text-white uppercase tracking-wider flex items-center gap-3 group-hover:text-yellow-400 transition-colors">
+                        <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        Áreas del Ecosistema
+                    </h3>
+                    <div class="flex items-center gap-3 mt-2">
+                        <p class="text-xs text-gray-400">Puntos de encuentro y expansión para creadores.</p>
+                        <span class="text-[9px] bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded uppercase tracking-widest whitespace-nowrap hidden sm:inline-block">Próximamente</span>
+                    </div>
+                    <p class="text-[10px] text-gray-500 mt-1 italic block sm:hidden">Se activará a futuro.</p>
+                </div>
+                <div class="hidden md:block">
+                    <span class="text-[10px] text-gray-500 uppercase tracking-widest border border-gray-700/50 px-3 py-1.5 rounded-full bg-white/5">Fase de Integración Futura</span>
                 </div>
             </div>
             
-            <div class="click-hint md:opacity-0">No Interactivo</div>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- COL 2: PROCESOS (ONBOARDING & ACTIVACIÓN)  -->
-        <!-- ========================================== -->
-        <div class="flex flex-col gap-5 md:gap-6">
-
-            <!-- Card: Onboarding (INTERACTIVE) -->
-            <div class="premium-card p-6 md:p-8 fade-in delay-2 group" onclick="openModal('modal-onboarding')">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <div class="icon-box text-gray-300 group-hover:text-yellow-400 transition-colors">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
-                        </div>
-                        <h2 class="text-lg md:text-xl font-semibold text-white">Onboarding de Satélites</h2>
-                    </div>
-                    <span class="badge">PROCESO 01</span>
-                </div>
-                <div class="mt-4 pt-4 border-t border-white/5">
-                    <p class="text-gray-400 text-sm">
-                        Registro por fases y categorías. Haz clic para ver los perfiles satélite.
-                    </p>
-                </div>
-                <div class="click-hint">Clic para expandir</div>
-            </div>
-
-            <!-- Card: Activación & Evaluación (INTERACTIVE - EDÉN) -->
-            <div class="premium-card p-6 md:p-8 fade-in delay-3 relative overflow-hidden group" onclick="openModal('modal-eden')">
-                <!-- Hover Glow -->
-                <div class="absolute -right-10 -bottom-10 w-32 h-32 md:w-40 md:h-40 bg-yellow-500/10 blur-3xl rounded-full group-hover:bg-yellow-500/20 transition-all duration-500"></div>
-
-                <div class="flex items-start justify-between relative z-10">
-                    <div>
-                        <div class="icon-box text-gray-300 group-hover:text-yellow-400 transition-colors">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <h2 class="text-lg md:text-xl font-semibold text-white">Activación & Edén</h2>
-                    </div>
-                    <span class="badge">PROCESO 02</span>
-                </div>
-
-                <div class="mt-4 pt-4 border-t border-white/5 relative z-10">
-                    <p class="text-gray-400 text-sm mb-3">
-                        Red social creativa, concursos y vida en la plataforma.
-                    </p>
-                    <div class="inline-flex items-center gap-2 text-xs text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded border border-yellow-400/20">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                        Ecosistema Interactivo
-                    </div>
-                </div>
-                <div class="click-hint">Explorar Edén</div>
-            </div>
-
-        </div>
-
-        <!-- ========================================== -->
-        <!-- ROW 2: CONTRATOS INTELIGENTES              -->
-        <!-- ========================================== -->
-        <div class="full-width fade-in delay-4 mt-4">
-            <h3 class="text-xs font-bold text-gray-500 tracking-[0.2em] uppercase mb-4 ml-1">Capa Legal & Tecnológica</h3>
-            
-            <div class="grid md:grid-cols-2 gap-4 md:gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 
-                <!-- Contrato Nativo -->
-                <div class="premium-card p-6 flex flex-col md:flex-row gap-4 md:gap-6 items-center md:items-start group hover:bg-white/5 transition-colors">
-                    <div class="icon-box w-12 h-12 md:w-14 md:h-14 rounded-full bg-blue-500/10 border-blue-500/20 text-blue-400 shrink-0 mb-0">
-                        <!-- Shield Icon -->
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                <!-- Concursos -->
+                <div class="relative p-6 rounded-2xl bg-gradient-to-b from-white/5 to-transparent border border-white/10 overflow-hidden group/eco hover:border-yellow-500/50 transition-all duration-500 transform hover:-translate-y-2">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover/eco:opacity-20 group-hover/eco:text-yellow-400 transition-all transform group-hover/eco:scale-110">
+                        <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                     </div>
-                    <div class="text-center md:text-left w-full">
-                        <div class="flex flex-col md:flex-row items-center gap-2 mb-2 md:justify-start justify-center">
-                            <h4 class="text-base md:text-lg font-semibold text-white">Contrato Nativo</h4>
-                            <span class="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded uppercase tracking-wider">Patente F1</span>
+                    <div class="relative z-10">
+                        <div class="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center mb-4 group-hover/eco:bg-yellow-500 group-hover/eco:text-black transition-colors text-yellow-500 shadow-[0_0_15px_rgba(250,204,21,0.2)]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"></path></svg>
                         </div>
-                        <p class="text-sm text-gray-400 mb-2">Independiente y seguro.</p>
-                        <p class="text-xs text-gray-500">Protege la autoría inicial del proyecto satélite desde el momento de su egreso.</p>
+                        <h4 class="text-white text-base font-bold mb-2">Concursos</h4>
+                        <p class="text-[11px] text-gray-400 leading-relaxed">Proyectos económicos y realizables. "Ventanas" para mostrarse, generar fandom y ampliar red de contactos.</p>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-0 group-hover/eco:opacity-100 transition-opacity"></div>
+                </div>
+
+                <!-- Vitrina -->
+                <div class="relative p-6 rounded-2xl bg-gradient-to-b from-white/5 to-transparent border border-white/10 overflow-hidden group/eco hover:border-yellow-500/50 transition-all duration-500 transform hover:-translate-y-2">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover/eco:opacity-20 group-hover/eco:text-yellow-400 transition-all transform group-hover/eco:scale-110">
+                        <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center mb-4 group-hover/eco:bg-yellow-500 group-hover/eco:text-black transition-colors text-yellow-500 shadow-[0_0_15px_rgba(250,204,21,0.2)]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                        </div>
+                        <h4 class="text-white text-base font-bold mb-2">Conexión (Vitrina)</h4>
+                        <p class="text-[11px] text-gray-400 leading-relaxed">Enlaces a TikTok, Instagram, Twitch. Espacio privado pero con muestra a redes para generar Fandom.</p>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-0 group-hover/eco:opacity-100 transition-opacity"></div>
+                </div>
+
+                <!-- Juegos -->
+                <div class="relative p-6 rounded-2xl bg-gradient-to-b from-white/5 to-transparent border border-white/10 overflow-hidden group/eco hover:border-yellow-500/50 transition-all duration-500 transform hover:-translate-y-2">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover/eco:opacity-20 group-hover/eco:text-yellow-400 transition-all transform group-hover/eco:scale-110">
+                        <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center mb-4 group-hover/eco:bg-yellow-500 group-hover/eco:text-black transition-colors text-yellow-500 shadow-[0_0_15px_rgba(250,204,21,0.2)]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h4 class="text-white text-base font-bold mb-2">Juegos & Torneos</h4>
+                        <p class="text-[11px] text-gray-400 leading-relaxed">Área lúdica: Trivias de cine, rompecabezas. Torneos por equipos para fomentar la interacción.</p>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-0 group-hover/eco:opacity-100 transition-opacity"></div>
+                </div>
+
+                <!-- Clubes -->
+                <div class="relative p-6 rounded-2xl bg-gradient-to-b from-white/5 to-transparent border border-white/10 overflow-hidden group/eco hover:border-yellow-500/50 transition-all duration-500 transform hover:-translate-y-2">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover/eco:opacity-20 group-hover/eco:text-yellow-400 transition-all transform group-hover/eco:scale-110">
+                        <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72l5 2.73 5-2.73v3.72z"/></svg>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center mb-4 group-hover/eco:bg-yellow-500 group-hover/eco:text-black transition-colors text-yellow-500 shadow-[0_0_15px_rgba(250,204,21,0.2)]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        </div>
+                        <h4 class="text-white text-base font-bold mb-2">Clubes & Talleres</h4>
+                        <p class="text-[11px] text-gray-400 leading-relaxed">Clubes de lectura, cinéfilos, coleccionistas NFT. Talleres virtuales y Escuela Virtual Qantica.</p>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-0 group-hover/eco:opacity-100 transition-opacity"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- FILA 3: ECOSISTEMA EXTENDIDO (2 Columnas)  -->
+        <!-- ========================================== -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+            
+            <!-- MÓDULO SATELITAL -->
+            <div class="compartment interactive group">
+                <div class="flex items-center gap-2 mb-4 border-b border-white/5 pb-2 transition-colors group-hover:border-yellow-500/30">
+                    <div class="w-1.5 h-4 bg-gray-400 rounded-full group-hover:bg-yellow-400 transition-colors"></div>
+                    <h3 class="text-sm font-bold text-white uppercase tracking-widest">Módulo Satelital</h3>
+                </div>
+                <div class="space-y-2 mb-4">
+                    <div class="flex items-center gap-2 text-xs text-gray-400 bg-white/5 px-3 py-2 rounded transition-colors group-hover:bg-white/10">
+                        <span class="w-1 h-1 rounded-full bg-gray-500 group-hover:bg-yellow-500"></span> Trazabilidad
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-400 bg-white/5 px-3 py-2 rounded transition-colors group-hover:bg-white/10">
+                        <span class="w-1 h-1 rounded-full bg-gray-500 group-hover:bg-yellow-500"></span> Comunidad Satélites
+                    </div>
+                </div>
+                <div class="border border-white/10 bg-white/5 px-3 py-2.5 rounded text-center transition-colors group-hover:border-yellow-500/30 group-hover:bg-yellow-500/10">
+                    <span class="text-[11px] font-semibold text-gray-300 uppercase tracking-wide group-hover:text-yellow-400">Satélites Co-producen</span>
+                </div>
+            </div>
+
+            <!-- CO-FINANCIACIÓN (Visual & Interactivo) -->
+            <div class="compartment interactive co-finance-block border-white/10 group">
+                <div class="flex items-center gap-2 mb-3 border-b border-white/5 pb-2 relative z-10 transition-colors group-hover:border-yellow-500/30">
+                    <div class="w-1.5 h-4 bg-yellow-400 rounded-full"></div>
+                    <h3 class="text-sm font-bold text-white uppercase tracking-widest">Co-financiación</h3>
+                </div>
+                
+                <!-- Estado Normal -->
+                <div class="co-finance-default bg-black/30 p-4 rounded-lg border border-white/5 text-center mt-2">
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Pasa el cursor para ver la asociación estratégica.
+                    </p>
+                    <div class="flex justify-center items-center gap-3 mt-4 opacity-70">
+                        <div class="w-8 h-8 rounded bg-white/10 flex items-center justify-center text-xs font-bold text-white">C</div>
+                        <span class="text-gray-500">+</span>
+                        <div class="w-8 h-8 rounded bg-white/10 flex items-center justify-center text-xs font-bold text-white">A</div>
                     </div>
                 </div>
 
-                <!-- Contrato Secundario -->
-                <div class="premium-card p-6 flex flex-col md:flex-row gap-4 md:gap-6 items-center md:items-start group hover:bg-white/5 transition-colors">
-                    <div class="icon-box w-12 h-12 md:w-14 md:h-14 rounded-full bg-purple-500/10 border-purple-500/20 text-purple-400 shrink-0 mb-0">
-                        <!-- Eye/Network Icon -->
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                <!-- Estado Hover (Revelación Visual y Explicación A24) -->
+                <div class="co-finance-hover rounded-lg p-3 text-center border border-yellow-500/30 shadow-[0_0_15px_rgba(250,204,21,0.1)]">
+                    <span class="text-[10px] text-yellow-400 uppercase tracking-widest mb-1.5 block font-bold">Alianza Estratégica</span>
+                    <div class="flex items-center justify-center gap-2 mb-2">
+                        <span class="bg-white/10 px-2 py-0.5 rounded text-[9px] text-white border border-white/10">Creador</span>
+                        <svg class="w-3 h-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <span class="bg-white/10 px-2 py-0.5 rounded text-[9px] text-white border border-white/10">Artistas</span>
                     </div>
-                    <div class="text-center md:text-left w-full">
-                        <div class="flex flex-col md:flex-row items-center gap-2 mb-2 md:justify-start justify-center">
-                            <h4 class="text-base md:text-lg font-semibold text-white">Contrato Secundario</h4>
-                            <span class="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded uppercase tracking-wider">Público</span>
-                        </div>
-                        <p class="text-sm text-gray-400 mb-2">Trazabilidad y Crowdfunding.</p>
-                        <p class="text-xs text-gray-500">Visible para inversores y comunidad. Muestra el progreso del satélite.</p>
+                    <p class="text-[9px] text-gray-300 leading-tight mb-2">
+                        Aliados en marketing y visibilidad. <strong class="text-white">Baja el riesgo</strong> y <strong class="text-yellow-400">aumenta el valor del IP</strong>.
+                    </p>
+                    
+                    <!-- Tarjeta Ejemplo A24 -->
+                    <div class="bg-black/50 p-2 rounded border border-white/5 text-left w-full mt-auto">
+                        <span class="text-[8px] text-yellow-500 uppercase font-bold block mb-1">Ejemplo de éxito: A24 + Marty Supreme</span>
+                        <p class="text-[8px] text-gray-400 leading-tight">La asociación de <strong>Timothée Chalamet</strong> disparó el <em>hype</em> con sus redes sociales, sumando un valor inmenso al IP y multiplicando el <em>revenue</em> antes del estreno.</p>
                     </div>
                 </div>
+            </div>
+        </div>
 
+        <!-- ========================================== -->
+        <!-- FILA 4: QANTICA ACTIVATE & PATENTE F1      -->
+        <!-- ========================================== -->
+        <div class="compartment full-width relative overflow-hidden group border-yellow-500/30 bg-[#070707] mt-4 interactive shadow-[0_0_30px_rgba(250,204,21,0.05)]">
+            <!-- Efectos Tecnológicos de Fondo -->
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(250,204,21,0.05)_0%,transparent_50%)]"></div>
+            <div class="absolute -right-32 -top-32 w-96 h-96 bg-yellow-500/10 blur-[100px] rounded-full group-hover:bg-yellow-500/20 transition-colors duration-700"></div>
+            <div class="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-yellow-300 to-yellow-600"></div>
+            
+            <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10 p-2 md:p-6">
+                
+                <!-- Información Qantica Activate -->
+                <div class="flex-1 text-center lg:text-left">
+                    <div class="inline-flex items-center gap-2 mb-4 border border-yellow-500/30 px-3 py-1.5 rounded-full bg-yellow-500/10 backdrop-blur-sm">
+                        <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
+                        <span class="text-[10px] text-yellow-500 uppercase tracking-widest font-mono">Motor Principal del Ecosistema</span>
+                    </div>
+                    <h2 class="text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">QANTICA <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-600">ACTIVATE</span></h2>
+                    <p class="text-sm text-gray-400 max-w-lg mx-auto lg:mx-0">
+                        El núcleo tecnológico donde se consolida el proyecto. Registra, protege y escala el valor de cada creación en la plataforma.
+                    </p>
+                </div>
+                
+                <!-- Tarjeta Visual Patente F1 -->
+                <div class="flex-1 w-full max-w-md">
+                    <div class="relative p-[2px] rounded-2xl bg-gradient-to-r from-yellow-500/30 via-yellow-200/50 to-yellow-500/30 animate-pulse" style="animation-duration: 3s;">
+                        <div class="bg-[#0c0c0e] rounded-[14px] p-6 border border-black flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden">
+                            
+                            <!-- Fondo sutil tarjeta -->
+                            <div class="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.02)_50%,transparent_75%)] bg-[length:250%_250%,100%_100%] animate-[bg-pan_3s_linear_infinite]"></div>
+                            
+                            <!-- Círculo Giratorio F1 -->
+                            <div class="relative shrink-0 w-20 h-20 flex items-center justify-center">
+                                <svg class="absolute inset-0 w-full h-full text-yellow-500/40 animate-spin-slow" style="animation-duration: 8s;" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="10 10"/>
+                                    <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 5"/>
+                                </svg>
+                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-black font-extrabold text-2xl shadow-[0_0_20px_rgba(250,204,21,0.5)]">
+                                    F1
+                                </div>
+                            </div>
+                            
+                            <!-- Textos Patente -->
+                            <div class="relative z-10 text-center sm:text-left">
+                                <h3 class="text-2xl font-bold text-white mb-2 tracking-wide">PATENTE F1<sup class="text-sm text-yellow-500">&reg;</sup></h3>
+                                <div class="text-xs text-yellow-400 font-medium bg-yellow-500/10 border border-yellow-500/20 px-3 py-1.5 rounded inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                                    Enlazada a Activate Qantica
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                
             </div>
         </div>
 
     </main>
 
-    <!-- Footer Reflection -->
-    <footer class="mt-8 md:mt-16 text-center opacity-40 fade-in delay-4 pb-4">
-        <div class="h-px w-24 md:w-32 bg-gradient-to-r from-transparent via-gray-600 to-transparent mx-auto mb-4"></div>
-        <p class="text-[10px] uppercase tracking-widest text-gray-500">Qantica Ecosystem v1.0</p>
+    <!-- ========================================== -->
+    <!-- BOTÓN FINAL: ACTIVATE QANTICA              -->
+    <!-- ========================================== -->
+    <div class="text-center mt-12 mb-6 relative z-10">
+        <a href="fase0.html" class="inline-flex items-center gap-3 px-10 py-4 rounded-full border border-yellow-500/50 bg-[#0a0a0c] text-yellow-400 hover:bg-yellow-400 hover:text-black hover:border-yellow-400 transition-all duration-300 font-bold text-sm uppercase tracking-widest shadow-[0_0_20px_rgba(250,204,21,0.15)] hover:shadow-[0_0_40px_rgba(250,204,21,0.6)] transform hover:-translate-y-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            ACTIVATE QANTICA
+        </a>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="mt-auto text-center opacity-30 pb-4 relative z-10">
+        <p class="text-[10px] uppercase tracking-widest text-white font-mono">Qantica Ecosystem v1.0</p>
     </footer>
-
-    <!-- ========================================== -->
-    <!-- MODALS (Hidden by default) -->
-    <!-- ========================================== -->
-
-    <!-- Modal 1: Onboarding (Perfil Satélite) -->
-    <div id="modal-onboarding" class="modal-overlay" onclick="closeModal(event, 'modal-onboarding')">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeAllModals()">&times;</button>
-            
-            <header class="mb-6 md:mb-8 border-b border-white/10 pb-4">
-                <div class="text-accent text-xs md:text-sm tracking-widest uppercase mb-2">Información Detallada</div>
-                <h2 class="text-2xl md:text-3xl font-bold text-white">Perfil Satélite</h2>
-                <p class="text-sm md:text-base text-gray-400 mt-2">Usuarios que orbitan alrededor del creador principal. Ingreso paulatino por fases y categorías.</p>
-            </header>
-
-            <div class="space-y-6 md:space-y-8">
-                <!-- Section: Registro -->
-                <div class="bg-white/5 rounded-xl p-4 md:p-6 border border-white/5">
-                    <h3 class="text-lg md:text-xl text-white font-semibold mb-4 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-yellow-400 rounded-full"></span> Sistema de Registro
-                    </h3>
-                    <p class="text-gray-400 text-sm leading-relaxed mb-4">
-                        Al ingresar, los Satélites completan un formulario y adjuntan material de respaldo (Portafolio). El sistema los clasifica mediante un <strong>Puntaje (Score)</strong>.
-                    </p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div class="bg-black/40 p-3 rounded text-gray-300 border-l-2 border-yellow-500">
-                            <strong>Perfil Dinámico:</strong> Para usuarios con experiencia en múltiples áreas.
-                        </div>
-                        <div class="bg-black/40 p-3 rounded text-gray-300 border-l-2 border-yellow-500">
-                            <strong>Base de Datos:</strong> Disponible para "Call to Action" y notificaciones.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section: Categorías -->
-                <div>
-                    <h3 class="text-lg md:text-xl text-white font-semibold mb-6">Categorías por Fases</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        
-                        <!-- Col 1 -->
-                        <div class="space-y-3">
-                            <div class="text-yellow-400 font-mono text-xs uppercase tracking-wider border-b border-yellow-400/20 pb-2 mb-3">1. Desarrollo</div>
-                            <p class="text-xs text-gray-500 mb-2 italic">Foco en el texto</p>
-                            <ul class="feature-list text-sm space-y-2">
-                                <li>Script Doctor</li>
-                                <li>Co-creadores (Guionistas)</li>
-                                <li>Analistas de guion</li>
-                            </ul>
-                        </div>
-
-                        <!-- Col 2 -->
-                        <div class="space-y-3">
-                            <div class="text-yellow-400 font-mono text-xs uppercase tracking-wider border-b border-yellow-400/20 pb-2 mb-3">2. Producción</div>
-                            <p class="text-xs text-gray-500 mb-2 italic">Materialización</p>
-                            <ul class="feature-list text-sm space-y-1">
-                                <li>Productores Ejecutivos</li>
-                                <li>Storyboards / Arte</li>
-                                <li>Fotografía / Dirección</li>
-                                <li>Sonido / Música</li>
-                                <li>Edición / VFX</li>
-                                <li>Actores (Casting votado)</li>
-                                <li>Analistas Videojuegos</li>
-                            </ul>
-                        </div>
-
-                        <!-- Col 3 -->
-                        <div class="space-y-3">
-                            <div class="text-yellow-400 font-mono text-xs uppercase tracking-wider border-b border-yellow-400/20 pb-2 mb-3">3. Distribución</div>
-                            <p class="text-xs text-gray-500 mb-2 italic">Mercado y Venta</p>
-                            <ul class="feature-list text-sm space-y-2">
-                                <li>Agentes de ventas</li>
-                                <li>Distribuidores</li>
-                                <li>Festivales Virtuales</li>
-                                <li>Marketing / Estreno</li>
-                                <li>Conexión Plataformas</li>
-                            </ul>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal 2: Activación (El Edén) -->
-    <div id="modal-eden" class="modal-overlay" onclick="closeModal(event, 'modal-eden')">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeAllModals()">&times;</button>
-            
-            <header class="mb-6 md:mb-8 border-b border-white/10 pb-4">
-                <div class="text-accent text-xs md:text-sm tracking-widest uppercase mb-2">Ecosistema Social</div>
-                <h2 class="text-2xl md:text-3xl font-bold text-white">El Edén</h2>
-                <p class="text-sm md:text-base text-gray-400 mt-2">Red social laboral, interactiva y creativa. Puntos de encuentro entre usuarios.</p>
-            </header>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                
-                <!-- Feature 1 -->
-                <div class="bg-white/5 p-4 md:p-6 rounded-xl border border-white/5 hover:border-yellow-500/30 transition-colors">
-                    <div class="text-yellow-400 mb-3">
-                        <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"></path></svg>
-                    </div>
-                    <h3 class="text-base md:text-lg text-white font-semibold">Concursos & Crowdfunding</h3>
-                    <p class="text-gray-400 text-xs md:text-sm mt-2">Proyectos económicos y realizables. "Ventanas" para mostrarse, generar fandom y ampliar red de contactos.</p>
-                </div>
-
-                <!-- Feature 2 -->
-                <div class="bg-white/5 p-4 md:p-6 rounded-xl border border-white/5 hover:border-yellow-500/30 transition-colors">
-                    <div class="text-yellow-400 mb-3">
-                        <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                    </div>
-                    <h3 class="text-base md:text-lg text-white font-semibold">Conexión Externa (Vitrina)</h3>
-                    <p class="text-gray-400 text-xs md:text-sm mt-2">Enlaces a TikTok, Instagram, Twitch. Espacio privado pero con muestra a redes para generar Fandom.</p>
-                </div>
-
-                <!-- Feature 3 -->
-                <div class="bg-white/5 p-4 md:p-6 rounded-xl border border-white/5 hover:border-yellow-500/30 transition-colors">
-                    <div class="text-yellow-400 mb-3">
-                        <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <h3 class="text-base md:text-lg text-white font-semibold">Sala de Juegos & Torneos</h3>
-                    <p class="text-gray-400 text-xs md:text-sm mt-2">Área lúdica: Trivias de cine, rompecabezas. Torneos por equipos para fomentar la interacción.</p>
-                </div>
-
-                <!-- Feature 4 -->
-                <div class="bg-white/5 p-4 md:p-6 rounded-xl border border-white/5 hover:border-yellow-500/30 transition-colors">
-                    <div class="text-yellow-400 mb-3">
-                        <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                    </div>
-                    <h3 class="text-base md:text-lg text-white font-semibold">Clubes & Talleres</h3>
-                    <p class="text-gray-400 text-xs md:text-sm mt-2">Clubes de lectura, cinéfilos, coleccionistas NFT. Talleres virtuales y Escuela Virtual Qantica.</p>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- Script for Modals -->
-    <script>
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevent scrolling background
-        }
-
-        function closeModal(event, modalId) {
-            if (event.target === event.currentTarget || event.target.classList.contains('modal-close')) {
-                document.getElementById(modalId).classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-        
-        function closeAllModals() {
-            document.querySelectorAll('.modal-overlay').forEach(modal => {
-                modal.classList.remove('active');
-            });
-            document.body.style.overflow = '';
-        }
-
-        // Close on Escape key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === "Escape") {
-                closeAllModals();
-            }
-        });
-    </script>
 
 </body>
 </html>
