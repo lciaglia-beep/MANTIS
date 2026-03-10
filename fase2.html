@@ -2,503 +2,459 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Qantica | Script to Market</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENIGMA - Internal Framework v2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #050505;
-            --card-bg: rgba(12, 12, 14, 0.95); /* Más opaco para mejor rendimiento (menos cálculo de mezcla) */
-            --accent-yellow: #FACC15;
-            --accent-blue: #3B82F6;
-            --accent-green: #10B981;
-            --text-primary: #F3F4F6;
-            --text-secondary: #9CA3AF;
-            --border-light: rgba(255, 255, 255, 0.08);
+            --apple-black: #000000;
+            --apple-dark-gray: rgba(29, 29, 31, 0.7);
+            --corporate-yellow: #FFD700;
+            --text-silver: #f5f5f7;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* --- Optimized Background --- */
-        .bg-grid-fixed {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1;
-            background-color: var(--bg-color);
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--apple-black);
             background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-            /* Eliminamos backdrop-filter global para rendimiento */
+                radial-gradient(circle at 50% 10%, rgba(255,215,0,0.05) 0%, transparent 50%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 50px 50px, 50px 50px;
+            color: var(--text-silver);
+            margin: 0;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
         }
 
-        /* --- Scanline Animation (Lighter) --- */
-        .scanline {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.2) 51%);
-            background-size: 100% 4px;
-            pointer-events: none;
-            z-index: 50;
-            opacity: 0.15; /* Reducido para menos impacto visual/rendimiento */
+        h1, h2, h3, h4, .font-mono {
+            font-family: 'Space Grotesk', sans-serif;
         }
-        
-        /* --- Tech Card Styling --- */
-        .tech-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-light);
-            border-radius: 12px;
+
+        /* Glassmorphism Premium */
+        .glass-panel {
+            background: var(--apple-dark-gray);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 1.25rem; /* Un poco más sutil */
             position: relative;
             overflow: hidden;
-            transition: transform 0.2s ease;
-            /* Renderizado de hardware */
-            transform: translateZ(0); 
         }
 
-        /* Solo aplicamos blur si el dispositivo lo soporta bien (media query prefer-reduced-motion podría usarse aquí también) */
-        @media (min-width: 768px) {
-            .tech-card {
-                backdrop-filter: blur(8px); 
-                -webkit-backdrop-filter: blur(8px);
-                background: rgba(12, 12, 14, 0.85);
-            }
-        }
-
-        .tech-card::before {
+        .glass-panel::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), transparent);
+            opacity: 0.5;
+            transition: opacity 0.5s;
         }
 
-        .tech-card-hover:hover {
-            border-color: rgba(250, 204, 21, 0.3);
-            transform: translateY(-2px);
+        .glass-panel:hover {
+            border-color: var(--corporate-yellow);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.05);
         }
 
-        /* Corner accents */
-        .corner-accent {
-            position: absolute;
-            top: -1px; right: -1px;
-            width: 15px; height: 15px;
-            border-top: 2px solid var(--accent-yellow);
-            border-right: 2px solid var(--accent-yellow);
-            border-radius: 0 12px 0 0;
-            opacity: 0.6;
+        .glass-panel:hover::before { opacity: 1; }
+
+        /* Gradientes */
+        .yellow-gradient-text {
+            background: linear-gradient(180deg, #FFFFFF 0%, #FFD700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
         }
 
-        /* Typography */
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .text-glow { text-shadow: 0 0 20px rgba(250, 204, 21, 0.15); }
-
-        /* Grid Layout */
-        .grid-dashboard {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            max-width: 1280px;
-            margin: 0 auto;
-            padding-bottom: 60px;
-        }
-
-        @media (min-width: 1024px) {
-            .grid-dashboard {
-                grid-template-columns: repeat(12, 1fr);
-            }
-            .col-span-3 { grid-column: span 3; }
-            .col-span-4 { grid-column: span 4; }
-            .col-span-6 { grid-column: span 6; }
-            .col-span-8 { grid-column: span 8; }
-            .col-span-12 { grid-column: span 12; }
-        }
-
-        /* Animations */
-        .fade-in {
-            animation: fadeIn 0.6s cubic-bezier(0.2, 1, 0.3, 1) forwards; /* Más rápido */
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
-
-        /* Tag Styling */
-        .tech-tag {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 10px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 4px;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #d1d5db;
-        }
-        .tech-tag.highlight {
-            background: rgba(250, 204, 21, 0.1);
-            border-color: rgba(250, 204, 21, 0.3);
-            color: var(--accent-yellow);
-        }
-
-        /* --- FACTORY ANIMATION STYLES --- */
-        .factory-container {
+        /* Animaciones del Núcleo ENIGMA */
+        .enigma-core {
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4));
             position: relative;
-            padding: 20px 0;
-            overflow: hidden;
-        }
-        
-        .factory-line {
-            position: absolute;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 1;
+            z-index: 20;
         }
 
-        /* The Moving IP "Packet" */
-        .ip-packet {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: var(--accent-yellow);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--accent-yellow);
-            z-index: 2;
-        }
+        .spin-slow { transform-origin: center; animation: spin 20s linear infinite; }
+        .spin-slow-reverse { transform-origin: center; animation: spin 25s linear infinite reverse; }
+        .pulse-glow { animation: pulseCore 3s ease-in-out infinite alternate; }
 
-        /* Animation for Input (Left to Center) */
-        .anim-input {
-            top: 50%; left: 0;
-            animation: moveInput 3s infinite linear;
-        }
-        @keyframes moveInput {
-            0% { left: 5%; opacity: 0; }
-            10% { opacity: 1; }
-            45% { left: 45%; opacity: 1; }
-            50% { left: 50%; opacity: 0; transform: scale(2); } /* Merges into factory */
-            100% { left: 50%; opacity: 0; }
-        }
-
-        /* Animation for Output (Center to Branches) */
-        .anim-output-1 { animation: moveOutput1 3s infinite linear; animation-delay: 1.5s; top: 50%; left: 50%; }
-        .anim-output-2 { animation: moveOutput2 3s infinite linear; animation-delay: 1.5s; top: 50%; left: 50%; }
-        .anim-output-3 { animation: moveOutput3 3s infinite linear; animation-delay: 1.5s; top: 50%; left: 50%; }
-
-        @keyframes moveOutput1 {
-            0% { opacity: 0; transform: translate(0, 0); }
-            10% { opacity: 1; }
-            100% { opacity: 0; transform: translate(-100px, 80px); } /* To Visión/Left */
-        }
-        @keyframes moveOutput2 {
-            0% { opacity: 0; transform: translate(0, 0); }
-            10% { opacity: 1; }
-            100% { opacity: 0; transform: translate(0, 80px); } /* To Tech/Center */
-        }
-        @keyframes moveOutput3 {
-            0% { opacity: 0; transform: translate(0, 0); }
-            10% { opacity: 1; }
-            100% { opacity: 0; transform: translate(100px, 80px); } /* To Market/Right */
-        }
-
-        .pulsing-core {
-            animation: pulseCore 3s infinite ease-in-out;
-        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
         @keyframes pulseCore {
-            0%, 100% { box-shadow: 0 0 20px rgba(250, 204, 21, 0.1); transform: scale(1); }
-            50% { box-shadow: 0 0 30px rgba(250, 204, 21, 0.3); transform: scale(1.05); }
+            0% { filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.3)); transform: scale(0.98); }
+            100% { filter: drop-shadow(0 0 35px rgba(255, 215, 0, 0.6)); transform: scale(1.02); }
         }
 
-        .factory-node {
+        /* Líneas de datos SVG */
+        .data-line {
+            stroke-dasharray: 10, 10;
+            animation: flowData 20s linear infinite;
+        }
+        @keyframes flowData { to { stroke-dashoffset: -1000; } }
+
+        /* Elementos Interactivos Modulares */
+        .module-item {
+            border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(0,0,0,0.3);
             transition: all 0.3s ease;
         }
-        .factory-node:hover {
-            background: rgba(255,255,255,0.05);
-            border-color: rgba(255,255,255,0.2);
+        .module-item:hover {
+            border-color: rgba(255,215,0,0.4);
+            background: rgba(255,215,0,0.05);
+            transform: translateX(3px);
         }
+
+        .api-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: #FFD700;
+            box-shadow: 0 0 8px #FFD700;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* Scroll Reveal */
+        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.8s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
     </style>
 </head>
-<body class="min-h-screen pt-8 px-4 md:px-6">
+<body class="antialiased selection:bg-yellow-500 selection:text-black">
 
-    <div class="bg-grid-fixed"></div>
-    <div class="scanline"></div>
+    <!-- Reduje el padding top y bottom para compactar (pt-12 en vez de pt-24) -->
+    <div class="relative min-h-screen flex flex-col items-center pt-12 pb-12 px-4 sm:px-8">
+        
+        <!-- ENCABEZADO COMPACTADO -->
+        <!-- mb-8 en lugar de mb-16 -->
+        <header class="text-center mb-8 z-20 reveal w-full max-w-4xl" id="header">
+            <div class="inline-block px-3 py-1 rounded-full border border-yellow-500/30 bg-yellow-500/5 mb-4 backdrop-blur-md">
+                <span class="text-[10px] font-semibold tracking-[0.2em] text-yellow-500 uppercase">Internal Framework v2.0</span>
+            </div>
+            
+            <!-- Tamaños de fuente ajustados (text-6xl md:text-7xl) -->
+            <h1 class="text-6xl md:text-7xl font-bold tracking-tighter yellow-gradient-text mb-3">
+                ENIGMA
+            </h1>
+            <p class="text-lg md:text-xl text-gray-400 font-light tracking-wide leading-relaxed max-w-2xl mx-auto">
+                El motor omnisciente que controla y orquesta el flujo universal de datos.
+            </p>
+        </header>
 
-    <!-- Header -->
-    <header class="max-w-5xl mx-auto text-center mb-10 fade-in">
-        <div class="flex items-center justify-center gap-3 mb-3 opacity-80">
-            <div class="h-px w-8 bg-yellow-500"></div>
-            <span class="mono text-[10px] text-yellow-500 tracking-[0.3em] uppercase">Qantica Intelligence</span>
-            <div class="h-px w-8 bg-yellow-500"></div>
-        </div>
-        <h1 class="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tighter text-glow">
-            COMERCIALIZACIÓN
-        </h1>
-        <h2 class="text-lg text-yellow-500/90 font-light tracking-wide mb-4">Script to Market</h2>
-        <p class="text-xs text-gray-400 max-w-2xl mx-auto leading-relaxed border-t border-white/10 pt-4 hidden md:block">
-            Análisis avanzado para maximizar el potencial de la Propiedad Intelectual. Evaluamos no solo la película, sino el ecosistema de productos derivados.
-        </p>
-    </header>
-
-    <main class="grid-dashboard">
-
-        <!-- 1. DEFINICIÓN DEL PRODUCTO -->
-        <div class="tech-card tech-card-hover col-span-12 p-5 fade-in" style="animation-delay: 0.05s;">
-            <div class="corner-accent"></div>
-            <div class="flex flex-col md:flex-row gap-6 items-center">
-                <div class="flex-1 w-full">
-                    <h3 class="text-xs font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 bg-yellow-500 rounded-sm"></span> Alcance del Análisis
-                    </h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div class="bg-white/5 p-2 md:p-3 rounded border border-white/5 text-center">
-                            <div class="mono text-[9px] text-gray-500 mb-1">DESTINO</div>
-                            <div class="text-xs font-semibold text-white">Cine vs Streaming</div>
-                        </div>
-                        <div class="bg-white/5 p-2 md:p-3 rounded border border-white/5 text-center">
-                            <div class="mono text-[9px] text-gray-500 mb-1">EXPANSIÓN</div>
-                            <div class="text-xs font-semibold text-white">Libros / Comics</div>
-                        </div>
-                        <div class="bg-white/5 p-2 md:p-3 rounded border border-white/5 text-center">
-                            <div class="mono text-[9px] text-gray-500 mb-1">GAMIFICACIÓN</div>
-                            <div class="text-xs font-semibold text-white">Viabilidad Juego</div>
-                        </div>
-                        <div class="bg-white/5 p-2 md:p-3 rounded border border-white/5 text-center">
-                            <div class="mono text-[9px] text-gray-500 mb-1">VALOR</div>
-                            <div class="text-xs font-semibold text-yellow-400">Explotación IP</div>
-                        </div>
-                    </div>
-                </div>
+        <!-- KPI BAR COMPACTADO -->
+        <!-- mb-10 y py-4 en lugar de mb-20 y py-6 -->
+        <div class="w-full max-w-4xl flex justify-between items-center gap-2 mb-10 z-20 reveal border-y border-white/5 py-4 px-4 backdrop-blur-sm">
+            <div class="text-center group cursor-pointer">
+                <!-- text-2xl en lugar de text-3xl -->
+                <div class="text-2xl font-bold text-white mb-1 font-mono group-hover:text-yellow-500 transition-colors">12</div>
+                <div class="text-[9px] text-gray-500 uppercase tracking-widest">IPs Cine Activas</div>
+            </div>
+            <div class="w-px h-6 bg-white/10"></div>
+            <div class="text-center group cursor-pointer">
+                <div class="text-2xl font-bold text-white mb-1 font-mono group-hover:text-yellow-500 transition-colors">75.6</div>
+                <div class="text-[9px] text-gray-500 uppercase tracking-widest">L-SPM Promedio</div>
+            </div>
+            <div class="w-px h-6 bg-white/10"></div>
+            <div class="text-center group cursor-pointer">
+                <div class="text-2xl font-bold text-white mb-1 font-mono group-hover:text-yellow-500 transition-colors">9.3M€</div>
+                <div class="text-[9px] text-gray-500 uppercase tracking-widest">EPI Agregado</div>
+            </div>
+            <div class="w-px h-6 bg-white/10"></div>
+            <div class="text-center flex flex-col items-center justify-center group cursor-pointer h-full pt-1">
+                <div class="api-dot mb-1.5"></div>
+                <div class="text-[9px] text-gray-500 uppercase tracking-widest">Sistema Operativo</div>
             </div>
         </div>
 
-        <!-- 2. ANÁLISIS DE AUDIENCIA -->
-        <div class="tech-card tech-card-hover col-span-12 lg:col-span-8 p-6 fade-in" style="animation-delay: 0.1s;">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                    <svg class="w-4 h-4 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                    Audiencia & Segmentación
-                </h2>
-                <span class="mono text-[9px] bg-green-500/10 text-green-400 px-2 py-1 rounded border border-green-500/20">LIVE DATA</span>
+        <!-- ECOSISTEMA Y FLUJO -->
+        <!-- mb-20 en lugar de mb-32 para acercar todo -->
+        <div id="ecosystem-container" class="relative w-full max-w-6xl mx-auto flex flex-col items-center mb-24">
+            <svg id="connection-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0"></svg>
+
+            <!-- NÚCLEO ENIGMA MÁS PEQUEÑO -->
+            <!-- mb-12, w-56 h-56 en lugar de mb-20 w-80 h-80 -->
+            <div class="relative w-full flex justify-center mb-12 md:mb-16 z-10 reveal" id="hero">
+                <div id="enigma-node" class="relative w-48 h-48 md:w-56 md:h-56 flex items-center justify-center enigma-core pulse-glow">
+                    <svg viewBox="0 0 400 400" class="w-full h-full drop-shadow-xl" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="200" cy="200" r="180" fill="none" stroke="rgba(255, 215, 0, 0.1)" stroke-width="1"/>
+                        <circle cx="200" cy="200" r="150" fill="none" stroke="#FFD700" stroke-width="2" stroke-dasharray="4 12" class="spin-slow"/>
+                        <circle cx="200" cy="200" r="130" fill="none" stroke="rgba(255, 215, 0, 0.4)" stroke-width="1" stroke-dasharray="50 20 10 20" class="spin-slow-reverse"/>
+                        <path d="M200,80 L304,140 L304,260 L200,320 L96,260 L96,140 Z" fill="rgba(255, 215, 0, 0.05)" stroke="#FFD700" stroke-width="1.5" class="spin-slow"/>
+                        <path d="M200,100 L286,150 L286,250 L200,300 L114,250 L114,150 Z" fill="none" stroke="rgba(255, 255, 255, 0.2)" stroke-width="1" class="spin-slow-reverse"/>
+                        <circle cx="200" cy="200" r="45" fill="url(#coreGradient)" stroke="#FFD700" stroke-width="2"/>
+                        <circle cx="200" cy="200" r="15" fill="#FFF" filter="blur(3px)"/>
+
+                        <defs>
+                            <radialGradient id="coreGradient" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8"/>
+                                <stop offset="40%" stop-color="#FFD700" stop-opacity="0.4"/>
+                                <stop offset="100%" stop-color="#000000" stop-opacity="0.8"/>
+                            </radialGradient>
+                        </defs>
+                    </svg>
+                    <div id="enigma-anchor" class="absolute bottom-2 left-1/2 w-1 h-1"></div>
+                </div>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-8">
-                <!-- Columna Izquierda -->
-                <div class="space-y-4 border-r border-white/5 pr-0 md:pr-6">
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Comunidad Base</span>
-                            <span class="text-yellow-500 font-mono text-xs">Detectada</span>
-                        </div>
-                        <div class="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden flex">
-                            <div class="h-full bg-yellow-500 w-[70%]"></div>
-                        </div>
+            <!-- LAS 3 FASES COMPACTADAS -->
+            <!-- gap-4, p-5 en lugar de gap-6, p-6 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full z-10 relative">
+                
+                <!-- FASE 1 -->
+                <div class="glass-panel p-5 reveal group cursor-default" id="phase1">
+                    <div id="anchor-p1" class="absolute top-0 left-1/2 w-1 h-1"></div>
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-3">
+                        <div class="text-[10px] font-bold text-yellow-500 tracking-[0.15em] uppercase">FASE 1</div>
+                        <span class="text-gray-500 text-[9px] font-mono">INGESTING</span>
                     </div>
-
-                    <div class="mt-4">
-                        <h4 class="text-[10px] font-bold text-gray-500 mb-2 uppercase">Demografía</h4>
-                        <div class="flex flex-wrap gap-2">
-                            <span class="tech-tag">Gen Z (60%)</span>
-                            <span class="tech-tag">Millennials (30%)</span>
-                            <span class="tech-tag">Urbano</span>
+                    <h3 class="text-xl font-bold text-white mb-4">MÉTODO</h3>
+                    
+                    <div class="space-y-2">
+                        <div class="module-item p-2.5 rounded-lg">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-semibold text-gray-200">Módulo Creador</span>
+                                <div class="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse"></div>
+                            </div>
+                            <p class="text-[10px] text-gray-500 leading-tight">Absorción y procesamiento continuo en tiempo real (guion).</p>
+                        </div>
+                        <div class="module-item p-2.5 rounded-lg">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-semibold text-gray-200">Módulo Calidad de Obra</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500 leading-tight">Curación narrativa e identificación de potencial (L-SPM).</p>
+                        </div>
+                        <div class="module-item p-2.5 rounded-lg">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-semibold text-gray-200 flex items-center gap-1.5">Módulo Audiencia <span class="text-[8px] text-yellow-500 border border-yellow-500/30 px-1 rounded">API</span></span>
+                            </div>
+                            <p class="text-[10px] text-gray-500 leading-tight">Enlace directo a RRSS. Scraping de sentimiento y comunidad.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Columna Derecha -->
+                <!-- FASE 2 -->
+                <div class="glass-panel p-5 reveal group cursor-default" id="phase2">
+                    <div id="anchor-p2" class="absolute top-0 left-1/2 w-1 h-1"></div>
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-3">
+                        <div class="text-[10px] font-bold text-yellow-500 tracking-[0.15em] uppercase">FASE 2</div>
+                        <span class="text-gray-500 text-[9px] font-mono">COMPUTING</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-4">DESARROLLO</h3>
+                    
+                    <div class="space-y-2">
+                        <div class="module-item p-2.5 rounded-lg">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-semibold text-gray-200">Módulo Financiero</span>
+                                <div class="text-[9px] font-mono text-gray-400">Sync</div>
+                            </div>
+                            <p class="text-[10px] text-gray-500 leading-tight">Cálculo de necesidades, presupuesto automatizado y Business Plan.</p>
+                        </div>
+                        <div class="module-item p-2.5 rounded-lg">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-semibold text-gray-200">Empaquetado & Viabilidad</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500 leading-tight">Análisis comercial, dossier de venta y propuesta de casting.</p>
+                        </div>
+                        <div class="module-item p-2.5 rounded-lg">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-semibold text-gray-200">Ruta de Distribución</span>
+                                <div class="api-dot"></div>
+                            </div>
+                            <p class="text-[10px] text-gray-500 leading-tight">Festivales ➔ Cines ➔ Plataformas (Orden predictivo óptimo).</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FASE 3 -->
+                <div class="glass-panel p-5 reveal group cursor-default" id="phase3">
+                    <div id="anchor-p3" class="absolute top-0 left-1/2 w-1 h-1"></div>
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-3">
+                        <div class="text-[10px] font-bold text-yellow-500 tracking-[0.15em] uppercase">FASE 3</div>
+                        <span class="text-gray-500 text-[9px] font-mono">OUTPUT</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-4 text-balance">EXPOSICIÓN Y DASHBOARD</h3>
+                    
+                    <div class="space-y-2">
+                        <div class="module-item p-2.5 rounded-lg">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-semibold text-gray-200">Interfaz Interactiva</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500 leading-tight">Visualización de índices predictivos en tiempo real para decisión.</p>
+                        </div>
+                        <div class="module-item p-2.5 rounded-lg">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-semibold text-gray-200">Motor de Recomendación</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500 leading-tight">Matchmaking IP. Cruce de datos entre proyecto y demanda de mercado.</p>
+                        </div>
+                        <div class="module-item p-2.5 rounded-lg">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-semibold text-yellow-500">Venta a Plataformas</span>
+                                <svg class="w-2.5 h-2.5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                            </div>
+                            <p class="text-[10px] text-gray-500 leading-tight">Script to Market. Presentación directa a Streamers y Productoras.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- GRID INTERACTIVO: ALCANCE & AUDIENCIA -->
+        <div class="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4 mb-20">
+            
+            <!-- Alcance del Análisis -->
+            <div class="glass-panel p-6 reveal flex flex-col justify-between hover:border-yellow-500/30 transition-colors">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold text-white mb-1">Alcance del Análisis</h2>
+                    <p class="text-xs text-gray-400">Dimensiones de evaluación de viabilidad de la IP Cinematográfica.</p>
+                </div>
+
                 <div class="space-y-3">
-                     <div class="relative p-3 bg-white/5 rounded border-l-2 border-blue-500">
-                        <h5 class="text-blue-400 text-[10px] font-bold mb-1 mono">COMPORTAMIENTO</h5>
-                        <p class="text-gray-300 text-[10px] leading-relaxed">
-                            Consumidores de narrativas complejas, early adopters. Alta propensión Transmedia.
-                        </p>
-                     </div>
-                     <div class="relative p-3 bg-white/5 rounded border-l-2 border-purple-500">
-                        <h5 class="text-purple-400 text-[10px] font-bold mb-1 mono">OPORTUNIDAD</h5>
-                        <p class="text-gray-300 text-[10px] leading-relaxed">
-                            Vacío de mercado detectado en subgénero Cyberpunk VOD.
-                        </p>
-                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. GÉNERO Y FORMATO -->
-        <div class="tech-card tech-card-hover col-span-12 lg:col-span-4 p-6 fade-in" style="animation-delay: 0.15s;">
-            <div class="corner-accent"></div>
-            <h2 class="text-lg font-bold text-white mb-4">Identidad</h2>
-            
-            <div class="space-y-4">
-                <div>
-                    <div class="mono text-[9px] text-gray-500 uppercase mb-1">Género</div>
-                    <div class="text-xl font-bold text-white tracking-tight">CIENCIA FICCIÓN</div>
-                </div>
-
-                <div>
-                    <div class="mono text-[9px] text-gray-500 uppercase mb-2">Tags</div>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="tech-tag highlight">Cyberpunk Noir</span>
-                        <span class="tech-tag highlight">Thriller</span>
-                        <span class="tech-tag">Distopía</span>
+                    <div class="border-l-2 border-yellow-500/50 pl-3 py-1 hover:border-yellow-500 transition-colors cursor-default">
+                        <h4 class="text-[10px] font-mono text-gray-300 uppercase tracking-widest mb-0.5">Destino Formato</h4>
+                        <p class="text-[11px] text-gray-500">Cine / Series Streaming / Plataformas VOD</p>
+                    </div>
+                    <div class="border-l-2 border-gray-700 pl-3 py-1 hover:border-yellow-500 transition-colors cursor-default">
+                        <h4 class="text-[10px] font-mono text-gray-300 uppercase tracking-widest mb-0.5">Expansión Transmedia</h4>
+                        <p class="text-[11px] text-gray-500">Cómics / Libros / Merchandising de Universo</p>
+                    </div>
+                    <div class="border-l-2 border-gray-700 pl-3 py-1 hover:border-yellow-500 transition-colors cursor-default">
+                        <h4 class="text-[10px] font-mono text-gray-300 uppercase tracking-widest mb-0.5">Gamificación & Valor</h4>
+                        <p class="text-[11px] text-gray-500">Videojuegos / Franquicias / Licencias</p>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 4. SCRIPT FACTORY MARKET (DINÁMICO) -->
-        <div class="tech-card col-span-12 p-0 fade-in" style="animation-delay: 0.2s; overflow: visible;">
-            
-            <!-- Factory Header Area -->
-            <div class="bg-gradient-to-b from-yellow-900/10 to-transparent p-6 pb-2">
-                <div class="flex justify-between items-center mb-2">
-                    <h2 class="text-xl font-bold text-white tracking-widest uppercase flex items-center gap-2">
-                        <svg class="w-5 h-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
-                        SCRIPT FACTORY MARKET
-                    </h2>
-                    <div class="hidden md:flex gap-2">
-                        <div class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                        <div class="w-2 h-2 bg-yellow-500/50 rounded-full"></div>
-                        <div class="w-2 h-2 bg-yellow-500/20 rounded-full"></div>
+            <!-- Audiencia & Mercado -->
+            <div class="glass-panel p-6 reveal flex flex-col justify-between hover:border-yellow-500/30 transition-colors">
+                <div>
+                    <div class="flex items-center space-x-2 mb-5">
+                        <div class="api-dot"></div>
+                        <h2 class="text-xl font-bold text-white">Audiencia & Mercado</h2>
                     </div>
-                </div>
-                <p class="text-xs text-gray-500 mono mb-4">PROCESAMIENTO DE PROPIEDAD INTELECTUAL > GENERACIÓN DE ACTIVOS</p>
-                
-                <!-- FACTORY ANIMATION VISUALIZATION -->
-                <div class="factory-container h-32 w-full flex justify-center items-center">
-                    <!-- Background Connector Lines -->
-                    <div class="absolute inset-0 flex items-center justify-center opacity-20">
-                        <div class="w-full h-px bg-white"></div>
-                        <div class="absolute w-px h-full bg-white left-1/2"></div>
-                    </div>
-
-                    <!-- Input: Book IP -->
-                    <div class="absolute left-[5%] md:left-[10%] top-1/2 transform -translate-y-1/2 flex flex-col items-center z-10">
-                        <div class="w-10 h-12 bg-yellow-500/20 border border-yellow-500 rounded flex items-center justify-center mb-2">
-                            <span class="text-xl">📜</span>
+                    
+                    <!-- Barras de progreso minimalistas -->
+                    <div class="space-y-4 mb-6">
+                        <div class="group cursor-default">
+                            <div class="flex justify-between text-[10px] font-mono mb-1.5">
+                                <span class="text-gray-400 group-hover:text-white transition-colors">Generación Z</span>
+                                <span class="text-yellow-500">60%</span>
+                            </div>
+                            <div class="h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-yellow-500 rounded-full transition-all duration-1000" style="width: 60%"></div>
+                            </div>
                         </div>
-                        <span class="text-[9px] font-bold text-yellow-500 uppercase">Input IP</span>
+                        <div class="group cursor-default">
+                            <div class="flex justify-between text-[10px] font-mono mb-1.5">
+                                <span class="text-gray-400 group-hover:text-white transition-colors">Millennials</span>
+                                <span class="text-gray-300">30%</span>
+                            </div>
+                            <div class="h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-gray-400 rounded-full transition-all duration-1000" style="width: 30%"></div>
+                            </div>
+                        </div>
                     </div>
-
-                    <!-- The Core Machine -->
-                    <div class="w-20 h-20 bg-black border-2 border-yellow-500/50 rounded-full flex items-center justify-center relative z-20 pulsing-core bg-grid-fixed">
-                        <svg class="w-10 h-10 text-white animate-spin-slow" style="animation-duration: 10s;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    </div>
-
-                    <!-- Moving Packets -->
-                    <div class="ip-packet anim-input"></div>
-                    <div class="ip-packet anim-output-1 bg-blue-400" style="box-shadow: 0 0 10px #60a5fa;"></div>
-                    <div class="ip-packet anim-output-2 bg-purple-400" style="box-shadow: 0 0 10px #c084fc;"></div>
-                    <div class="ip-packet anim-output-3 bg-green-400" style="box-shadow: 0 0 10px #4ade80;"></div>
-                </div>
-            </div>
-
-            <!-- Factory Modules (Output Grid) -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-white/10 bg-black/20">
-                
-                <!-- Module 1: Visión -->
-                <div class="p-6 border-b md:border-b-0 md:border-r border-white/10 factory-node hover:bg-white/5 relative">
-                    <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-blue-500 rounded-full hidden md:block"></div>
-                    <h3 class="text-blue-400 text-xs font-bold uppercase mb-4 text-center">01. Estrategia & IP</h3>
-                    <ul class="space-y-3">
-                        <li class="flex items-start gap-2">
-                            <span class="text-blue-500 mt-1">▸</span>
-                            <div>
-                                <div class="text-white text-xs font-bold">Estratega IP</div>
-                                <div class="text-[10px] text-gray-500">Definición de visión global y long-tail.</div>
-                            </div>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-blue-500 mt-1">▸</span>
-                            <div>
-                                <div class="text-white text-xs font-bold">Inteligencia IP</div>
-                                <div class="text-[10px] text-gray-500">Análisis de tendencias.</div>
-                            </div>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-blue-500 mt-1">▸</span>
-                            <div>
-                                <div class="text-white text-xs font-bold">Monetización</div>
-                                <div class="text-[10px] text-gray-500">Modelos de ingreso de capital.</div>
-                            </div>
-                        </li>
-                    </ul>
                 </div>
 
-                <!-- Module 2: Tech & Expansión -->
-                <div class="p-6 border-b md:border-b-0 md:border-r border-white/10 factory-node hover:bg-white/5 relative">
-                    <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-purple-500 rounded-full hidden md:block"></div>
-                    <h3 class="text-purple-400 text-xs font-bold uppercase mb-4 text-center">02. Expansión Tech</h3>
-                    <ul class="space-y-3">
-                        <li class="flex items-start gap-2">
-                            <span class="text-purple-500 mt-1">▸</span>
-                            <div>
-                                <div class="text-white text-xs font-bold">Expertos Videojuegos</div>
-                                <div class="text-[10px] text-gray-500">Diseño, mecánicas y puzzles.</div>
-                            </div>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-purple-500 mt-1">▸</span>
-                            <div>
-                                <div class="text-white text-xs font-bold">Transmedia</div>
-                                <div class="text-[10px] text-gray-500">Expansión a Merch, Música y Marcas.</div>
-                            </div>
-                        </li>
-                         <li class="flex items-start gap-2">
-                            <span class="text-purple-500 mt-1">▸</span>
-                            <div>
-                                <div class="text-white text-xs font-bold">Equipo Tecnológico</div>
-                                <div class="text-[10px] text-gray-500">Análisis Cuantitativo + Cualitativo.</div>
-                            </div>
-                        </li>
-                    </ul>
+                <!-- Oportunidad -->
+                <div class="p-3 rounded-xl border border-yellow-500/20 bg-yellow-500/5 hover:bg-yellow-500/10 transition-colors cursor-default">
+                    <div class="text-[9px] font-mono text-yellow-500 mb-1.5 uppercase tracking-widest">Oportunidad Detectada</div>
+                    <p class="text-xs text-gray-300 leading-snug">Vacío de mercado en subgénero <strong class="text-white">Cyberpunk / Sci-Fi</strong> (VOD). Alta demanda, baja saturación de oferta.</p>
                 </div>
-
-                <!-- Module 3: Mercado -->
-                <div class="p-6 factory-node hover:bg-white/5 relative">
-                    <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-green-500 rounded-full hidden md:block"></div>
-                    <h3 class="text-green-400 text-xs font-bold uppercase mb-4 text-center">03. Mercado</h3>
-                    <ul class="space-y-3">
-                        <li class="flex items-start gap-2">
-                            <span class="text-green-500 mt-1">▸</span>
-                            <div>
-                                <div class="text-white text-xs font-bold">Audiencia</div>
-                                <div class="text-[10px] text-gray-500">Estudio de comportamiento y demanda.</div>
-                            </div>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-green-500 mt-1">▸</span>
-                            <div>
-                                <div class="text-white text-xs font-bold">Marketing & Redes</div>
-                                <div class="text-[10px] text-gray-500">Gestión de comunidad.</div>
-                            </div>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-green-500 mt-1">▸</span>
-                            <div>
-                                <div class="text-white text-xs font-bold">Producción</div>
-                                <div class="text-[10px] text-gray-500">Viabilidad de cadena y valor del activo.</div>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-
             </div>
         </div>
 
-    </main>
+        <!-- FOOTER (Sólo Copyright) -->
+        <footer class="text-center relative z-20 reveal w-full mt-4">
+            <p class="text-[9px] text-gray-600 font-mono tracking-widest uppercase">
+                © 2024 ENIGMA SYSTEMS. ALL DATA RESERVED.
+            </p>
+        </footer>
+    </div>
 
-    <!-- Footer Stats -->
-    <footer class="max-w-6xl mx-auto w-full mb-8 flex flex-col md:flex-row justify-between items-center opacity-40 px-6 text-center gap-2 fade-in pb-8">
-        <div class="mono text-[10px] tracking-widest text-gray-500 uppercase flex items-center gap-2">
-            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            System Optimized (Mobile Ready)
-        </div>
-        <div class="mono text-[10px] tracking-widest text-gray-500 uppercase">Qantica v2.2 // Factory Mode</div>
-    </footer>
+    <script>
+        // Animación Dinámica de Flechas (SVG) adaptadas a la nueva altura
+        function drawConnections() {
+            const canvas = document.getElementById('connection-canvas');
+            const container = document.getElementById('ecosystem-container');
+            const startAnchor = document.getElementById('enigma-anchor');
+            
+            const targets = [
+                document.getElementById('anchor-p1'),
+                document.getElementById('anchor-p2'),
+                document.getElementById('anchor-p3')
+            ];
 
+            if (!canvas || !container || !startAnchor || !targets[0]) return;
+
+            const containerRect = container.getBoundingClientRect();
+            const startRect = startAnchor.getBoundingClientRect();
+            
+            const startX = startRect.left - containerRect.left + (startRect.width / 2);
+            const startY = startRect.top - containerRect.top;
+
+            let svgHTML = `
+                <defs>
+                    <linearGradient id="lineGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#FFD700" stop-opacity="0.8" />
+                        <stop offset="100%" stop-color="#FFD700" stop-opacity="0" />
+                    </linearGradient>
+                    <marker id="arrowHead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#FFD700" opacity="0.6"/>
+                    </marker>
+                </defs>
+            `;
+
+            targets.forEach((target, index) => {
+                const targetRect = target.getBoundingClientRect();
+                const endX = targetRect.left - containerRect.left + (targetRect.width / 2);
+                const endY = targetRect.top - containerRect.top;
+
+                // Ajuste proporcional de la curva debido al espacio reducido
+                const cp1Y = startY + (endY - startY) * 0.35;
+                const cp2Y = endY - 20;
+
+                const pathData = `M ${startX} ${startY} C ${startX} ${cp1Y}, ${endX} ${cp2Y}, ${endX} ${endY}`;
+
+                svgHTML += `
+                    <!-- Línea de fondo difusa -->
+                    <path d="${pathData}" fill="none" stroke="rgba(255, 255, 255, 0.05)" stroke-width="1.5" />
+                    
+                    <!-- Línea de flujo de datos animada -->
+                    <path d="${pathData}" fill="none" stroke="url(#lineGlow)" stroke-width="1.5" 
+                          marker-end="url(#arrowHead)" class="data-line" style="animation-delay: ${index * 0.4}s" />
+                `;
+            });
+
+            canvas.innerHTML = svgHTML;
+        }
+
+        // Observer para Reveal on Scroll
+        function initScrollReveal() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -20px 0px" });
+
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        }
+
+        // Init
+        window.addEventListener('load', () => {
+            initScrollReveal();
+            setTimeout(drawConnections, 100); 
+        });
+
+        // Resize & Scroll handling para recálculo de SVG
+        let updateTimeout;
+        window.addEventListener('resize', drawConnections);
+        window.addEventListener('scroll', () => {
+            if (updateTimeout) cancelAnimationFrame(updateTimeout);
+            updateTimeout = requestAnimationFrame(drawConnections);
+        });
+    </script>
 </body>
 </html>
